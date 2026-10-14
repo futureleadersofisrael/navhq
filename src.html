@@ -1,0 +1,798 @@
+<title>__TITLE__</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Secular+One&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: field-ops console. Sticky status header, squad cards as the main surface, fixed bottom bar for one-thumb use, a "more" sheet for the secondary screens. */
+:root{
+  --bg:#eef0ea; --surface:#fbfcf8; --line:#d3d8cc; --ink:#1b2620; --muted:#5d6b62;
+  --accent:#1f5c45; --accent-ink:#ffffff; --accent-soft:#dbe8e0;
+  --ok:#2c7a4b; --ok-soft:#dcefe3; --warn:#a86a00; --warn-soft:#fbecd0; --crit:#b3261e; --crit-soft:#f8dcd9;
+  --s1:#1f6fb2; --s2:#0e8f8a; --s3:#c2410c; --s4:#a21caf; --s5:#4d7c0f; --s6:#b45309; --s7:#0369a1; --s8:#9f1239;
+  --f-display:"Secular One","Assistant",system-ui,sans-serif;
+  --f-body:"Assistant",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121815; --surface:#1a221e; --line:#2e3a33; --ink:#e6ece7; --muted:#9aa89f;
+  --accent:#5fb48f; --accent-ink:#0d1a14; --accent-soft:#1f3a2e;
+  --ok:#5cc28a; --ok-soft:#173326; --warn:#e6a93a; --warn-soft:#3a2c10; --crit:#f07167; --crit-soft:#3d1a18;
+  --s1:#5aa9e6; --s2:#3cc7bf; --s3:#f08a4b; --s4:#d76ce0; --s5:#9bd04a; --s6:#f0b057; --s7:#60c5ff; --s8:#fb7185;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121815; --surface:#1a221e; --line:#2e3a33; --ink:#e6ece7; --muted:#9aa89f;
+  --accent:#5fb48f; --accent-ink:#0d1a14; --accent-soft:#1f3a2e;
+  --ok:#5cc28a; --ok-soft:#173326; --warn:#e6a93a; --warn-soft:#3a2c10; --crit:#f07167; --crit-soft:#3d1a18;
+  --s1:#5aa9e6; --s2:#3cc7bf; --s3:#f08a4b; --s4:#d76ce0; --s5:#9bd04a; --s6:#f0b057; --s7:#60c5ff; --s8:#fb7185;
+  color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45}
+#app{direction:rtl;min-height:100%;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+input[type=text],input[type=number],input[type=time],select,textarea{border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:var(--bg);min-width:0;max-width:100%}
+textarea{width:100%;min-height:64px;resize:vertical}
+label.f{display:grid;gap:3px;font-size:.9rem;color:var(--muted)}
+label.f>input,label.f>select,label.f>textarea{color:var(--ink);font-size:1rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .wrap{padding-block:10px;display:grid;gap:8px}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand h1{font-family:var(--f-display);font-weight:400;font-size:1.25rem;margin:0}
+.brand small{color:var(--muted);font-size:.8rem;display:block;font-family:var(--f-body)}
+.clock{font-size:1.05rem;color:var(--muted)}
+.navs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.navs::-webkit-scrollbar{display:none}
+.navbtn{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;display:grid;line-height:1.15;text-align:right}
+.navbtn small{color:var(--muted);font-size:.75rem}
+.navbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.navbtn[aria-pressed="true"] small{color:inherit;opacity:.85}
+.statusbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.roof{display:flex;align-items:baseline;gap:6px;font-weight:700;flex-wrap:wrap}
+.roof .mono{font-size:1.1rem}
+.pill{white-space:nowrap;display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 10px;font-size:.85rem;font-weight:600;background:var(--accent-soft);color:var(--ink)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.crit{background:var(--crit-soft);color:var(--crit)}
+.pill.neutral{background:transparent;border:1px solid var(--line);color:var(--muted)}
+.sync{font-size:.8rem;color:var(--muted);margin-inline-start:auto}
+
+.banner{border-radius:var(--r);padding:10px 14px;font-weight:600}
+.banner.crit{background:var(--crit-soft);color:var(--crit);border:1px solid var(--crit)}
+.banner.warn{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn)}
+.banner.info{background:var(--accent-soft)}
+
+main .wrap{padding-block:14px;display:grid;gap:14px}
+h2{font-family:var(--f-display);font-weight:400;font-size:1.15rem;margin:0}
+h3{font-size:1rem;margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+details.brief{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px}
+details.brief summary{font-weight:700;cursor:pointer}
+details.brief p{margin:8px 0 0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;gap:10px}
+.panel.sq{border-inline-start:5px solid var(--sq)}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:grid;gap:10px;border-top:5px solid var(--sq)}
+.card.alert{border-color:var(--crit);box-shadow:0 0 0 2px var(--crit-soft)}
+.card-h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.sqname{font-family:var(--f-display);font-size:1.25rem;line-height:1.1}
+.sqmeta{font-size:.85rem;color:var(--muted)}
+.steps{display:flex;flex-wrap:wrap;gap:6px}
+.step{min-width:52px;min-height:48px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);display:grid;place-items:center;padding:4px 6px;line-height:1.1;text-align:center}
+.step b{font-size:.95rem}
+.step .t{font-family:var(--f-mono);font-size:.72rem;direction:ltr}
+.step.done{background:var(--sq);border-color:var(--sq);color:#fff}
+.step.next{border-color:var(--sq);border-width:2.5px}
+.step.cross b::before{content:"⛔ ";font-size:.75em}
+.card-f{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 12px;font-weight:600;min-height:40px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{border-color:var(--crit);color:var(--crit)}
+.btn.small{min-height:32px;padding:4px 10px;font-size:.85rem}
+.btn.big{min-height:64px;font-size:1.2rem;width:100%;background:var(--sq,var(--accent));border-color:var(--sq,var(--accent));color:#fff}
+.btn.big.sos{background:var(--crit);border-color:var(--crit)}
+.due{font-size:.85rem;color:var(--muted)}
+.pop{border:1px dashed var(--sq,var(--accent));border-radius:8px;padding:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.9rem}
+
+.mapbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.mapbox svg{display:block;width:100%;height:auto;max-height:70vh;direction:ltr}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--sq,var(--line));border-radius:999px;padding:4px 12px;background:var(--surface);font-weight:600}
+.chip[aria-pressed="true"]{background:var(--sq,var(--accent));color:#fff}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+
+.roles{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}
+.roles select{width:100%}
+.roles .rep{grid-column:2;font-size:.8rem;color:var(--warn);margin-top:-4px}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.names label,.check label{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:var(--bg)}
+.names input,.check input{width:20px;height:20px;accent-color:var(--accent);flex:none}
+.check{display:grid;gap:6px}
+.check label.on{border-color:var(--ok);background:var(--ok-soft)}
+
+.contacts{display:grid;gap:6px}
+.contact{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-block:6px}
+.contact:last-child{border-bottom:0}
+.contact .num{font-family:var(--f-mono);font-size:1.05rem;direction:ltr;user-select:all}
+ol.proc{margin:0;padding-inline-start:22px;display:grid;gap:4px}
+
+form.addev{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+form.addev textarea{grid-column:1/-1}
+.evlist{display:grid;gap:6px}
+.ev{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--line);border-inline-start:4px solid var(--sq,var(--line))}
+.ev .mono{color:var(--muted);font-size:.85rem}
+.ev .who{grid-column:2;font-size:.8rem;color:var(--muted)}
+.ev.auto{opacity:.8}
+
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table.sum{border-collapse:collapse;width:100%;font-size:.9rem;white-space:nowrap}
+table.sum th,table.sum td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:center}
+table.sum th{background:var(--bg);font-weight:700}
+table.sum td.sq{font-weight:700;color:var(--sq)}
+table.sum input{width:70px;padding:4px}
+.late{color:var(--crit);font-weight:700}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--sq,var(--accent))}
+
+.scale{display:flex;gap:4px}
+.scale button{flex:1;min-height:40px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-weight:700}
+.scale button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+.student{display:grid;gap:6px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--bg)}
+.student.eye{border-color:var(--warn);background:var(--warn-soft)}
+.student .notes{font-size:.9rem;display:grid;gap:3px}
+
+nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+nav.tabs .in{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);direction:rtl}
+nav.tabs button{border:0;background:transparent;padding:8px 2px 10px;display:grid;gap:2px;justify-items:center;font-size:.78rem;font-weight:600;color:var(--muted);position:relative}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button[aria-selected="true"]{color:var(--accent)}
+nav.tabs .dot{position:absolute;top:6px;inset-inline-end:calc(50% - 18px);width:9px;height:9px;border-radius:50%;background:var(--crit)}
+.sheet{position:fixed;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom,0px));z-index:29;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.12)}
+.sheet .in{max-width:980px;margin:0 auto;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;direction:rtl}
+.sheet button{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:10px;font-weight:600}
+.sheet button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.card.alert{animation:pulse 2s ease-in-out infinite}@keyframes pulse{50%{box-shadow:0 0 0 5px var(--crit-soft)}}}
+</style>
+
+<div id="app" dir="rtl">
+  <header class="top"><div class="wrap">
+    <div class="brand"><h1 id="h1"></h1><span class="clock mono" id="clock">--:--</span></div>
+    <div class="navs" id="navs" role="group" aria-label="בחירת ניווט"></div>
+    <div class="statusbar" id="statusbar"></div>
+  </div></header>
+  <main><div class="wrap" id="view"></div></main>
+  <div class="sheet" id="sheet" hidden><div class="in" id="sheetin"></div></div>
+  <nav class="tabs" aria-label="מסכים"><div class="in" id="tabs" role="tablist"></div></nav>
+</div>
+
+<script>
+const BUILTIN = /*__CFG__*/null;
+const IS_TEMPLATE = /*__TEMPLATE__*/false;
+const ROLES = [["head","ראש חוליה"],["nav","נווט"],["time","אחראי זמן"],["water","אחראי מים"],["rear","מאסף"]];
+const BRIEF_ITEMS = ["וידוא ויזואלי: כולם מרגישים טוב","כובע, נעליים סגורות, 4.5 ליטר מים (בדיקה בעיניים)","מפה בניילון, מצפן, טלפון טעון ומטען נייד","ראש חוליה ותפקידים שובצו, מלאך שומר בתוך החוליה","שעת הגג, דיווח בכל נקודה ובכל שעה עגולה","נוהל נתק ונוהל \"הלכתי לאיבוד\"","סכנות: ערוצים, חום, בעלי חיים, מעברי חובה בלבד"];
+const LOG_ITEMS = ["בדיקת מזג אוויר ועומס חום (מוקד טבע)","חובש ותיק מע\"ר ברכב החפ\"ק","מכשיר לוויני וטלפונים טעונים","מילוי מים לפני היציאה","איש צוות במעבר החובה","העברת ציוד לחניון הלילה","הזמנת מזון / קניות","תיאום חניון עם קק\"ל"];
+const EVTYPES = ["הערה","נתק קשר","פציעה","איחור","יציאה מהגזרה","חניך","אחר"];
+
+/* ---------- state ---------- */
+const S = { nav:null, tab:"control", filter:null, mySq:null, sheet:false,
+  cfg:null, docs:{}, events:{}, students:{}, db:null, user:null, myId:null, names:{}, canAdmin:true,
+  local:true, pop:null, err:null, ask:null, setupDraft:null, cfgLoaded:false, dirty:false };
+try{ S.tab = localStorage.getItem("tab")||"control"; S.mySq = localStorage.getItem("mySq"); S.nav = localStorage.getItem("nav"); }catch(e){}
+
+const cfg = () => S.cfg || BUILTIN;
+/* standalone mode (file opened outside claude.ai): keep everything on this device */
+const LS_KEY = "navhq-v2";
+function localSave(){ if(!S.persist) return; try{ localStorage.setItem(LS_KEY, JSON.stringify({docs:S.docs,events:S.events,students:S.students,cfg:S.cfg})); }catch(e){} }
+function localLoad(){ try{ const o=JSON.parse(localStorage.getItem(LS_KEY)||"null"); if(o){ S.docs=o.docs||{}; S.events=o.events||{}; S.students=o.students||{}; S.cfg=o.cfg||null; } }catch(e){} }
+const NAVS = () => cfg().navs||[];
+const SQ = () => (cfg().squads||[]).map(s=>s.id);
+const squad = id => (cfg().squads||[]).find(s=>s.id===id)||{id,names:[],guide:""};
+const navById = id => NAVS().find(n=>n.id===id) || NAVS()[0];
+const curNav = () => navById(S.nav);
+const fixedByName = name => (cfg().fixed||[]).find(f=>f.name===name);
+const routeOf = (navId,sq) => (navById(navId).routes||{})[sq] || {pts:[],air:0,walk:0,lvl:""};
+const doc = id => S.docs[id] || {};
+const sqState = (id,sq) => ((doc(id).squads||{})[sq]) || {};
+const sqColor = sq => { const i=SQ().indexOf(sq); return `var(--s${(i%8)+1})`; };
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const hhmm = ms => { if(!ms) return "--:--"; const d=new Date(ms); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); };
+const dur = ms => { const neg=ms<0; ms=Math.abs(ms); const m=Math.round(ms/60000); return (neg?"-":"")+Math.floor(m/60)+":"+String(m%60).padStart(2,"0"); };
+const dist = (a,b) => Math.hypot(a.e-b.e,a.N-b.N)/1000;
+
+/* steps of a squad in a nav */
+function stepsOf(navId, sq){
+  const nav = navById(navId), r = routeOf(navId,sq), st = sqState(navId,sq), p = st.p||{};
+  const out = [{key:"dep", label:"יציאה", t:st.dep}];
+  if(nav.cross) out.push({key:"cross", label:"מ.ח", t:st.cross, cross:true});
+  r.pts.forEach((pt,i)=>out.push({key:"p"+i, label:String(i+1), sub:pt.n, t:p[i]}));
+  out.push({key:"fin", label:"סיום", t:st.fin});
+  return out;
+}
+function baseDay(navId){
+  let first=null; SQ().forEach(sq=>{const d=sqState(navId,sq).dep; if(d&&(!first||d<first)) first=d;});
+  const d = first? new Date(first) : new Date(); d.setHours(0,0,0,0); return d;
+}
+function atTime(navId, hm){ const [h,m]=(hm||"00:00").split(":").map(Number); const d=baseDay(navId); d.setHours(h,m,0,0); return d.getTime(); }
+function shiftMs(navId){
+  let first=null; SQ().forEach(sq=>{const d=sqState(navId,sq).dep; if(d&&(!first||d<first)) first=d;});
+  if(!first) return 0;
+  const plan = Math.min(...SQ().map(sq=>atTime(navId, navById(navId).dep?.[sq]||"06:30")));
+  const sh = first-plan; return Math.abs(sh)>90*60000 ? Math.round(sh/60000)*60000 : 0;
+}
+const planMs = (navId,hm) => atTime(navId,hm)+shiftMs(navId);
+const roofMs = navId => planMs(navId, navById(navId).roof);
+function isNavDay(navId){ const [d,m]=(navById(navId).day||"").split(".").map(Number); const n=new Date(); return n.getDate()===d && n.getMonth()+1===m; }
+const briefDone = (navId,sq) => { const b=((doc(navId).briefs||{})[sq]||{}).items||{}; return BRIEF_ITEMS.every((_,i)=>b[i]); };
+
+function status(navId, sq, now){
+  const st = sqState(navId,sq), steps = stepsOf(navId,sq), roof = roofMs(navId);
+  const stamps = steps.map(s=>s.t).filter(Boolean);
+  const last = Math.max(0, ...stamps, st.rep||0);
+  const doneCount = steps.filter(s=>s.t && s.key.startsWith("p")).length, total = steps.filter(s=>s.key.startsWith("p")).length;
+  if(st.fin) return {cls: st.fin>roof?"warn":"ok", text: st.fin>roof?"סיימה אחרי שעת הגג":"סיימה", last, due:null, done:doneCount, total};
+  if(!st.dep){
+    const plan = planMs(navId, navById(navId).dep?.[sq]||"06:30");
+    const anyDep = SQ().some(x=>sqState(navId,x).dep);
+    if((anyDep||isNavDay(navId)) && now > plan + 15*60000) return {cls:"warn", text:"טרם יצאה, מאחרת", last, due:null, done:0, total};
+    return {cls:"neutral", text:"טרם יצאה · "+hhmm(plan), last, due:null, done:0, total};
+  }
+  const d = new Date(last); d.setMinutes(0,0,0); let due = d.getTime()+3600000;
+  if(now > roof) return {cls:"crit", text:"חרגה משעת הגג", last, due, done:doneCount, total, alert:true, over: now-roof};
+  if(now > due + 5*60000) return {cls:"crit", text:"לא דיווחה מאז "+hhmm(last), last, due, done:doneCount, total, alert:true};
+  if(now > roof - 30*60000) return {cls:"warn", text:"קרובה לשעת הגג", last, due, done:doneCount, total};
+  return {cls:"ok", text:"בדרך · "+doneCount+"/"+total+" נק'", last, due, done:doneCount, total};
+}
+
+/* ---------- writes ---------- */
+function deepMerge(t,s){ for(const k in s){ if(s[k] && typeof s[k]==="object" && !Array.isArray(s[k])){ t[k]=deepMerge(t[k]&&typeof t[k]==="object"?{...t[k]}:{}, s[k]); } else t[k]=s[k]; } return t; }
+const queues = {};
+function showErr(e){
+  const code = e&&e.code;
+  S.err = code==="invalid_argument" ? "אין לך הרשאת כתיבה. בקש מבעל העמוד הרשאת Contributor."
+        : code==="quota_exceeded" ? "המאגר מלא. צריך למחוק אירועים ישנים מהיומן."
+        : "השמירה לא הצליחה. בדוק קליטה ונסה שוב.";
+  render();
+}
+async function ensureDoc(path, init){
+  try{ const ref=S.db.doc(path); const g=await ref.get(); if(!g.exists) await ref.set(init||{created:Date.now()}); }catch(e){ showErr(e); }
+}
+async function patch(navId, obj){
+  if(S.local){ S.docs[navId] = deepMerge({...doc(navId)}, obj); localSave(); render(); return; }
+  queues[navId] = (queues[navId]||Promise.resolve()).then(async()=>{
+    try{ if(!S.docs[navId]?.__exists) await ensureDoc("navs/"+navId); await S.db.doc("navs/"+navId).update(obj); }
+    catch(e){ showErr(e); }
+  });
+  return queues[navId];
+}
+async function patchStudent(key, obj){
+  if(S.local){ S.students[key]=deepMerge({...(S.students[key]||{})},obj); localSave(); render(); return; }
+  queues["st"+key] = (queues["st"+key]||Promise.resolve()).then(async()=>{
+    try{ if(!S.students[key]) await ensureDoc("students/"+key,{}); await S.db.doc("students/"+key).update(obj); }catch(e){ showErr(e); }
+  });
+}
+async function addEvent(navId, ev){
+  ev = {...ev, t: ev.t||Date.now(), by: S.myId||null};
+  if(S.local){ (S.events[navId] ||= []).unshift({id:Math.random().toString(36).slice(2), ...ev}); localSave(); render(); return; }
+  try{ await S.db.collection("navs/"+navId+"/events").add(ev); }catch(e){ showErr(e); }
+}
+async function saveCfg(c){
+  S.cfg = c;
+  if(S.local){ localSave(); render(); return; }
+  try{ await S.db.doc("config/main").set(c); }catch(e){ showErr(e); }
+}
+async function stamp(navId, sq, key, t){
+  const s = stepsOf(navId,sq).find(x=>x.key===key);
+  const o = {}; t = t ?? Date.now();
+  if(key.startsWith("p")) o.p = {[key.slice(1)]: t}; else o[key]=t;
+  if(key==="cross" && t) o.crossing = {t};
+  await patch(navId, {squads:{[sq]:o}});
+  const label = key==="dep"?"יצאה":key==="fin"?"סיימה":key==="cross"?"עברה את מעבר החובה":("הגיעה לנקודה "+s.label+" ("+s.sub+")");
+  addEvent(navId,{sq, type:"auto", text:label});
+}
+async function report(navId, sq){ await patch(navId,{squads:{[sq]:{rep:Date.now()}}}); addEvent(navId,{sq,type:"auto",text:"דיווח שעה עגולה"}); }
+function tryDepart(sq){
+  if(!briefDone(S.nav,sq)){ S.ask={kind:"dep",sq}; render(); return; }
+  stamp(S.nav,sq,"dep");
+}
+
+/* ---------- render ---------- */
+const ICONS = {
+  control:'<path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>',
+  squad:'<circle cx="12" cy="7" r="3.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
+  map:'<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z M9 4v14 M15 6v14" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/>',
+  sos:'<path d="M12 3l9 16H3z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><path d="M12 10v4M12 16.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  more:'<circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/>'
+};
+const MAIN = [["control","שליטה"],["squad","חוליה"],["map","מפה"],["sos","חירום"]];
+const MORE = [["brief","תדריכים"],["roster","נוכחות ותפקידים"],["decision","נקודת החלטה"],["crossing","מעבר חובה"],["logistics","לוגיסטיקה ומים"],["log","יומן"],["students","חניכים"],["debrief","תחקיר"],["sum","סיכום זמנים"],["setup","הגדרות"]];
+const VIEWS = {control:vControl,squad:vSquad,map:vMap,sos:vSos,brief:vBrief,roster:vRoster,decision:vDecision,crossing:vCrossing,logistics:vLogistics,log:vLog,students:vStudents,debrief:vDebrief,sum:vSum,setup:vSetup};
+
+function editing(){ const a=document.activeElement; if(!a||!a.closest||!a.closest("#view")) return false; return a.tagName==="SELECT"||a.tagName==="TEXTAREA"||(a.tagName==="INPUT"&&a.type!=="checkbox"&&a.type!=="radio"); }
+function render(){
+  if(editing()){ S.dirty=true; return; } S.dirty=false;
+  const c = cfg(), now = Date.now();
+  $("#clock").textContent = hhmm(now);
+  $("#h1").innerHTML = `חפ"ק ניווטים${c.area?" · "+esc(c.area):""}<small>${esc(c.unit||"שלוחה: לא הוגדר שם, ראו הגדרות")}</small>`;
+  const navs = NAVS();
+  if(!S.nav || !navs.some(n=>n.id===S.nav)) S.nav = navs[0]?.id || null;
+  $("#navs").innerHTML = navs.map(n=>`<button class="navbtn" aria-pressed="${n.id===S.nav}" data-nav="${esc(n.id)}"><span>${esc(n.label)}</span><small class="mono">${esc(n.day)} · גג ${esc(n.roof)}</small></button>`).join("");
+  const inMore = MORE.some(([k])=>k===S.tab);
+  let sts=[], alerts=0;
+  if(S.nav){
+    const nav = curNav(); sts = SQ().map(sq=>status(S.nav,sq,now)); alerts = sts.filter(s=>s.alert).length;
+    const fin = SQ().filter(sq=>sqState(S.nav,sq).fin).length, roof = roofMs(S.nav), left = roof-now, sh = shiftMs(S.nav);
+    const notStarted = !SQ().some(sq=>sqState(S.nav,sq).dep) && !isNavDay(S.nav);
+    $("#statusbar").innerHTML =
+      `<span class="roof">שעת גג <span class="mono">${hhmm(roof)}</span>`+(notStarted?`<span class="pill neutral">הניווט עוד לא התחיל</span></span>`:
+      `<span class="pill ${left<0?"crit":left<30*60000?"warn":"neutral"}">${left<0?"עברה לפני "+dur(-left):"עוד "+dur(left)}</span></span>`)+
+      (sh?`<span class="pill warn">מצב תרגול: השעות הוזזו לפי היציאה בפועל</span>`:"")+
+      `<span class="pill ok">${fin}/${SQ().length} סיימו</span>`+(alerts?`<span class="pill crit">${alerts} בהתראה</span>`:"")+
+      `<span class="sync">${S.local?(S.persist?"עצמאי: נשמר במכשיר הזה בלבד":"מתחבר..."):"מסונכרן עם הצוות"}</span>`;
+  } else $("#statusbar").innerHTML = `<span class="sync">${S.local?"מצב מקומי":"מסונכרן"}</span>`;
+  $("#tabs").innerHTML = MAIN.map(([k,l])=>`<button role="tab" aria-selected="${S.tab===k}" data-tab="${k}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>${l}${k==="control"&&alerts?'<span class="dot"></span>':""}</button>`).join("")
+    + `<button role="tab" aria-selected="${inMore}" data-act="more" aria-expanded="${S.sheet}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS.more}</svg>עוד</button>`;
+  $("#sheet").hidden = !S.sheet;
+  $("#sheetin").innerHTML = MORE.map(([k,l])=>`<button aria-selected="${S.tab===k}" data-tab="${k}">${l}</button>`).join("");
+  let h = "";
+  if(S.err) h += `<div class="banner crit" role="alert">${esc(S.err)} <button class="btn small" data-act="clearerr">סגור</button></div>`;
+  if(S.ask?.kind==="dep") h += `<div class="banner warn" role="alert">תדריך הבוקר של חוליה ${esc(S.ask.sq)} לא סומן כהושלם. <button class="btn small" data-tab="brief">לתדריך</button> <button class="btn small danger" data-act="depanyway">לצאת בכל זאת</button> <button class="btn small" data-act="askno">ביטול</button></div>`;
+  if(S.nav){
+    const over2 = sts.some((s,i)=>s.over>2*3600000 && !sqState(S.nav,SQ()[i]).fin);
+    if(over2) h += `<div class="banner crit" role="alert">חוליה חורגת ביותר משעתיים משעת הגג: לעדכן את חדר מצב טיולים (02-6222211) ואת מנהל האזור.</div>`;
+  }
+  if(!navs.length && S.tab!=="setup") h += `<div class="banner info">עוד לא הוגדרו ניווטים לשלוחה הזו. <button class="btn small primary" data-tab="setup">למסך ההגדרות</button></div>`;
+  else h += (VIEWS[S.tab]||vControl)(now,sts);
+  $("#view").innerHTML = h;
+  resolveNames();
+}
+
+/* ----- control ----- */
+function vControl(now,sts){
+  const nav = curNav(); if(!nav) return "";
+  let h = `<details class="brief"><summary>דגשי הניווט: ${esc(nav.label)}</summary><p>${esc(nav.brief)}</p><p class="muted">התחלה: ${esc(nav.start)} · סיום: ${esc(nav.end)}${nav.cross?" · מעבר חובה: "+esc(nav.cross):""}. דיווח בכל נקודה או בשעה עגולה, לפי המוקדם.</p></details>`;
+  h += `<div class="cards">`;
+  SQ().forEach((sq,i)=>{
+    const st = sts[i], r = routeOf(S.nav,sq), steps = stepsOf(S.nav,sq), roles = (doc(S.nav).roles||{})[sq]||{};
+    const nextIdx = steps.findIndex(s=>!s.t);
+    const pres = (doc(S.nav).present||{})[sq]||{}; const pc = Object.values(pres).filter(Boolean).length;
+    const bd = briefDone(S.nav,sq);
+    h += `<article class="card ${st.alert?"alert":""}" style="--sq:${sqColor(sq)}">
+      <div class="card-h"><div><div class="sqname">חוליה ${esc(sq)}${r.lvl?` <small class="muted">· ${esc(r.lvl)}</small>`:""}</div>
+      <div class="sqmeta">${esc(squad(sq).guide||"ללא מדריך")} · ראש חוליה: ${roles.head?esc(roles.head):"לא שובץ"} · ${pc?pc+"/"+squad(sq).names.length+" נוכחים":"נוכחות לא נבדקה"} · ${bd?"תודרכה":"<span style='color:var(--warn)'>לא תודרכה</span>"}</div></div>
+      <span class="pill ${st.cls}">${esc(st.text)}</span></div>
+      <div class="steps">${steps.map((s,j)=>`<button class="step ${s.t?"done":""} ${j===nextIdx?"next":""} ${s.cross?"cross":""}" data-step="${esc(sq)}|${s.key}" aria-label="${s.label}${s.sub?" נקודה "+s.sub:""}"><b>${s.label}</b><span class="t">${s.t?hhmm(s.t):(s.sub?"#"+esc(s.sub):"")}</span></button>`).join("")}</div>`;
+    if(S.pop && S.pop.sq===sq){
+      const s = steps.find(x=>x.key===S.pop.key);
+      h += `<div class="pop"><span>${s.label}${s.sub?" (נק' "+esc(s.sub)+")":""}:</span>
+        <label>שעה <input type="time" id="poptime" value="${s.t?hhmm(s.t):hhmm(Date.now())}"></label>
+        <button class="btn small primary" data-act="popsave">שמור שעה</button>
+        ${s.t?`<button class="btn small danger" data-act="popclear">בטל רישום</button>`:""}
+        <button class="btn small" data-act="popclose">סגור</button></div>`;
+    }
+    h += `<div class="card-f">${sqState(S.nav,sq).dep&&!sqState(S.nav,sq).fin?`<button class="btn" data-rep="${esc(sq)}">דיווח שעה עגולה</button>`:""}
+      <span class="due">${st.due?"דיווח הבא עד <span class=mono>"+hhmm(st.due)+"</span>":""}${st.last?" · אחרון <span class=mono>"+hhmm(st.last)+"</span>":""}</span></div></article>`;
+  });
+  h += `</div><p class="muted small">לחיצה על השלב הבא רושמת את השעה עכשיו. לחיצה על שלב שכבר נרשם פותחת תיקון שעה או ביטול.</p>`;
+  return h;
+}
+
+/* ----- squad view (for the squad leader's phone) ----- */
+function vSquad(now,sts){
+  const nav = curNav(); if(!nav) return "";
+  let h = `<div class="row"><label class="f">החוליה שלי <select id="mysq"><option value="">בחר חוליה</option>${SQ().map(sq=>`<option ${S.mySq===sq?"selected":""} value="${esc(sq)}">חוליה ${esc(sq)}</option>`).join("")}</select></label></div>`;
+  if(!S.mySq || !SQ().includes(S.mySq)) return h + `<p class="muted">מסך זה מיועד לטלפון של ראש החוליה: רק הציר שלו, שעת הגג, וכפתור דיווח אחד. בחר חוליה כדי להתחיל.</p>`;
+  const sq = S.mySq, i = SQ().indexOf(sq), st = sts[i], steps = stepsOf(S.nav,sq), r = routeOf(S.nav,sq), roles = (doc(S.nav).roles||{})[sq]||{};
+  const next = steps.find(s=>!s.t);
+  h += `<section class="panel sq" style="--sq:${sqColor(sq)}">
+    <div class="card-h"><div class="sqname">חוליה ${esc(sq)} · ${esc(nav.label)}</div><span class="pill ${st.cls}">${esc(st.text)}</span></div>
+    <div class="row"><span>שעת גג <b class="mono">${hhmm(roofMs(S.nav))}</b></span><span>·</span><span>${r.walk} ק"מ הליכה</span><span>·</span><span>מדריך: ${esc(squad(sq).guide||"")}</span></div>
+    ${next ? (next.key==="dep" ? `<button class="btn big" data-act="sqdep">יצאנו לדרך</button>` : `<button class="btn big" data-step="${esc(sq)}|${next.key}">${next.key==="fin"?"סיימנו את הניווט":next.key==="cross"?"עברנו את מעבר החובה":"הגענו לנקודה "+next.label+" (#"+esc(next.sub)+")"}</button>`) : `<div class="banner info">הניווט הסתיים. כל הכבוד.</div>`}
+    ${st.due&&!sqState(S.nav,sq).fin?`<div class="row"><button class="btn" data-rep="${esc(sq)}">דיווח שעה עגולה</button><span class="due">דיווח הבא עד <span class="mono">${hhmm(st.due)}</span></span></div>`:""}
+    <button class="btn big sos" data-act="sqsos">הלכנו לאיבוד / אין קשר</button>
+  </section>`;
+  h += `<section class="panel"><h2>הציר שלנו</h2><div class="steps">${steps.map(s=>`<span class="step ${s.t?"done":""} ${s.cross?"cross":""}" style="--sq:${sqColor(sq)}"><b>${s.label}</b><span class="t">${s.t?hhmm(s.t):(s.sub?"#"+esc(s.sub):"")}</span></span>`).join("")}</div>
+    <ol class="proc">${nav.start?`<li>התחלה: ${esc(nav.start)}</li>`:""}${nav.cross?`<li>מעבר חובה: ${esc(nav.cross)} ${fixedByName(nav.cross)?`<span class="mono">${fixedByName(nav.cross).e}/${fixedByName(nav.cross).N}</span>`:""}</li>`:""}${r.pts.map((q,j)=>`<li>נק' ${esc(q.n)} · <span class="mono">${q.e}/${q.N}</span> · ${esc(q.d)}</li>`).join("")}<li>סיום: ${esc(nav.end)}</li></ol></section>`;
+  h += `<section class="panel"><h2>תפקידים היום</h2><div class="roles">${ROLES.map(([k,l])=>`<span class="muted">${l}</span><b>${roles[k]?esc(roles[k]):"לא שובץ"}</b>`).join("")}</div></section>`;
+  h += `<section class="panel"><h2>נוהל "הלכתי לאיבוד"</h2>${lostProc()}</section>`;
+  h += `<section class="panel"><h2>טלפונים</h2>${contactsHtml()}</section>`;
+  return h;
+}
+const lostProc = () => `<ol class="proc"><li>עוצרים. החוליה נשארת יחד.</li><li>מזהים על המפה את הנקודה האחרונה שבה הייתם בטוחים.</li><li>מדווחים לחפ"ק מיד, שולחים מיקום ופועלים לפי ההנחיה.</li><li>אין קשר: מנסים דרך חוליה שכנה, ואז עולים לנקודה הגבוהה הקרובה ומנסים שוב, במשרוקיות או בסימון.</li><li>נכנסתם לחשיכה: עוצרים, מדווחים מיקום ומחכים לאיסוף.</li><li>חניך שנותק מהחוליה: עוצר במקום, משרק ומחכה. החוליה חוזרת לנקודה שבה ראו אותו לאחרונה.</li></ol>`;
+const contactsHtml = () => `<div class="contacts">${(cfg().contacts||[]).map(([n,p])=>`<div class="contact"><span>${esc(n)}</span><span style="display:flex;gap:8px;align-items:center"><span class="num">${esc(p)}</span><button class="btn small" data-copy="${esc(p)}">העתק</button></span></div>`).join("")}</div>`;
+
+/* ----- map ----- */
+function vMap(){
+  const nav = curNav(); if(!nav) return "";
+  const show = SQ().filter(sq=>!S.filter||S.filter===sq);
+  const fixed = [nav.start,nav.end,nav.cross].map(fixedByName).filter(Boolean);
+  const all = [...fixed]; SQ().forEach(sq=>routeOf(S.nav,sq).pts.forEach(p=>all.push(p)));
+  if(!all.length) return `<p class="muted">אין נקודות לניווט הזה. הזן צירים במסך ההגדרות.</p>`;
+  const minE = Math.min(...all.map(p=>p.e))-400, maxE = Math.max(...all.map(p=>p.e))+400;
+  const minN = Math.min(...all.map(p=>p.N))-400, maxN = Math.max(...all.map(p=>p.N))+400;
+  const W = maxE-minE, H = maxN-minN, X = e=>e-minE, Y = n=>maxN-n, fs = Math.max(W,H)/42;
+  let g = "";
+  for(let k=Math.ceil(minE/1000)*1000;k<=maxE;k+=1000) g+=`<line x1="${X(k)}" y1="0" x2="${X(k)}" y2="${H}" stroke="var(--line)" stroke-width="${fs/8}"/><text x="${X(k)+fs/4}" y="${fs*1.1}" font-size="${fs*.7}" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${k/1000}</text>`;
+  for(let k=Math.ceil(minN/1000)*1000;k<=maxN;k+=1000) g+=`<line x1="0" y1="${Y(k)}" x2="${W}" y2="${Y(k)}" stroke="var(--line)" stroke-width="${fs/8}"/><text x="${fs/4}" y="${Y(k)-fs/4}" font-size="${fs*.7}" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${k/1000}</text>`;
+  let routes = "", marks = "";
+  show.forEach(sq=>{
+    const r = routeOf(S.nav,sq), st = sqState(S.nav,sq), p = st.p||{}, col = sqColor(sq);
+    const seq = [fixedByName(nav.start), fixedByName(nav.cross), ...r.pts, fixedByName(nav.end)].filter(Boolean);
+    routes += `<polyline points="${seq.map(q=>X(q.e)+","+Y(q.N)).join(" ")}" fill="none" stroke="${col}" stroke-width="${fs/5}" stroke-dasharray="${fs/1.5} ${fs/3}" stroke-linejoin="round" opacity=".85"/>`;
+    r.pts.forEach((q,i)=>{ const done=!!p[i];
+      marks += `<g><circle cx="${X(q.e)}" cy="${Y(q.N)}" r="${fs*.55}" fill="${done?col:"var(--surface)"}" stroke="${col}" stroke-width="${fs/6}"/><text x="${X(q.e)}" y="${Y(q.N)+fs*.25}" font-size="${fs*.62}" text-anchor="middle" fill="${done?"#fff":col}" font-weight="700" font-family="Assistant,sans-serif">${esc(q.n)}</text></g>`; });
+    let cur = null;
+    if(st.fin) cur = fixedByName(nav.end); else { for(let i=r.pts.length-1;i>=0;i--) if(p[i]){cur=r.pts[i];break;} if(!cur && st.cross) cur=fixedByName(nav.cross); if(!cur && st.dep) cur=fixedByName(nav.start); }
+    if(cur && st.dep){ const off=(SQ().indexOf(sq)-(SQ().length-1)/2)*fs*0.9;
+      marks += `<g><rect x="${X(cur.e)+off-fs*.6}" y="${Y(cur.N)-fs*2.4}" width="${fs*1.2}" height="${fs*1.2}" rx="${fs*.25}" fill="${col}"/><text x="${X(cur.e)+off}" y="${Y(cur.N)-fs*1.5}" font-size="${fs*.8}" text-anchor="middle" fill="#fff" font-weight="700" font-family="Assistant,sans-serif">${esc(sq)}</text></g>`; }
+  });
+  const fixm = (name,shape)=>{ const q=fixedByName(name); if(!q) return ""; const x=X(q.e),y=Y(q.N),s=fs*.8;
+    const sh = shape==="tri"?`<path d="M${x} ${y-s} L${x+s} ${y+s*.8} L${x-s} ${y+s*.8}Z"`:shape==="dia"?`<path d="M${x} ${y-s} L${x+s} ${y} L${x} ${y+s} L${x-s} ${y}Z"`:`<rect x="${x-s*.8}" y="${y-s*.8}" width="${s*1.6}" height="${s*1.6}"`;
+    return `${sh} fill="var(--ink)" stroke="var(--surface)" stroke-width="${fs/8}"/><text x="${x}" y="${y+s*2.3}" font-size="${fs*.7}" text-anchor="middle" fill="var(--ink)" font-weight="700" font-family="Assistant,sans-serif">${esc(q.name)}</text>`; };
+  const fixedSvg = fixm(nav.start,"tri") + (nav.end!==nav.start?fixm(nav.end,"sq"):"") + (nav.cross?fixm(nav.cross,"dia"):"");
+  const sb = `<line x1="${fs}" y1="${H-fs}" x2="${fs+1000}" y2="${H-fs}" stroke="var(--ink)" stroke-width="${fs/5}"/><text x="${fs+500}" y="${H-fs*1.5}" font-size="${fs*.7}" text-anchor="middle" fill="var(--ink)" font-family="Assistant,sans-serif">1 ק"מ</text>`;
+  return `<div class="filters"><button class="chip" aria-pressed="${!S.filter}" data-filter="">כל החוליות</button>${SQ().map(sq=>`<button class="chip" style="--sq:${sqColor(sq)}" aria-pressed="${S.filter===sq}" data-filter="${esc(sq)}">חוליה ${esc(sq)}</button>`).join("")}</div>
+    <div class="mapbox"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="מפת צירים ${esc(nav.label)}">${g}${routes}${fixedSvg}${marks}${sb}</svg></div>
+    <div class="legend"><span>▲ התחלה</span><span>■ סיום</span><span>◆ מעבר חובה</span><span>עיגול מלא = נקודה שדווחה</span><span>ריבוע ממוספר = מיקום אחרון שדווח</span><span>רשת: קילומטרים ברשת ישראל החדשה</span></div>
+    <div class="panel"><h2>נקודות הציר${S.filter?" · חוליה "+esc(S.filter):""}</h2>${(S.filter?[S.filter]:SQ()).map(sq=>{const r=routeOf(S.nav,sq);return `<p style="margin:0"><b style="color:${sqColor(sq)}">חוליה ${esc(sq)}</b> <span class="muted">(${r.walk} ק"מ הליכה)</span><br>${r.pts.map((q,i)=>`${i+1}. נק' ${esc(q.n)} · <span class="mono">${q.e}/${q.N}</span> · ${esc(q.d)}`).join("<br>")}</p>`;}).join("")}</div>`;
+}
+
+/* ----- briefings ----- */
+function vBrief(){
+  const nav = curNav(); if(!nav) return "";
+  const d = doc(S.nav), st = d.staff||{};
+  let h = `<section class="panel"><h2>פתיחת יום לצוות (5 דקות לפני שהחניכים קמים)</h2>
+    <div class="grid2"><label class="f">חניכים שצריכים עין היום<textarea id="st-eye" data-staff="open.eye">${esc(st.open?.eye||"")}</textarea></label>
+    <label class="f">דגש אחד ליום: "היום שמים לב ל..."<textarea id="st-focus" data-staff="open.focus">${esc(st.open?.focus||"")}</textarea></label></div>
+    <p class="muted small" style="margin:0">לו"ז היום: ${esc(nav.label)}, שעת גג ${esc(nav.roof)}${nav.cross?", מעבר חובה "+esc(nav.cross):""}. ${st.open?.t?"נשמר ב-"+hhmm(st.open.t):""}</p></section>`;
+  h += `<section class="panel"><h2>תדריך בוקר לחוליות (נ7)</h2><p class="muted small" style="margin:0">המדריך מסמן תוך כדי התדריך. חוליה שלא סומנה לא יוצאת באפליקציה בלי אישור מפורש.</p><div class="cards">`;
+  SQ().forEach(sq=>{ const b=((d.briefs||{})[sq]||{}), items=b.items||{}, n=BRIEF_ITEMS.filter((_,i)=>items[i]).length;
+    h += `<article class="panel sq" style="--sq:${sqColor(sq)}"><div class="card-h"><b>חוליה ${esc(sq)}</b><span class="pill ${n===BRIEF_ITEMS.length?"ok":n?"warn":"neutral"}">${n}/${BRIEF_ITEMS.length}${b.t?" · "+hhmm(b.t):""}</span></div>
+      <div class="check">${BRIEF_ITEMS.map((it,i)=>`<label class="${items[i]?"on":""}"><input type="checkbox" id="br-${esc(S.nav)}-${esc(sq)}-${i}" data-brief="${esc(sq)}|${i}" ${items[i]?"checked":""}>${it}</label>`).join("")}</div>
+      <button class="btn small" data-act="briefall" data-sq="${esc(sq)}">סמן הכל</button></article>`; });
+  h += `</div></section>`;
+  if(nav.cross){ const c=fixedByName(nav.cross);
+    h += `<section class="panel"><h2>תדריך חציית כביש</h2><ol class="proc"><li>אנחנו ב-<b>${esc(nav.cross)}</b>${c?` (<span class="mono">${c.e}/${c.N}</span>)`:""}. החצייה מהירה, אף אחד לא מתמהמה ולא דוחף.</li><li>שני אנשי צוות עוצרים תנועה עם אפודים זוהרים, איש צוות שלישי משלח בקבוצות.</li><li>מפנים מהר את הצד השני ומחכים בצד הדרך, לא על הציר.</li><li>בסוף החצייה ספירה, ורישום בטופס מעבר חובה.</li></ol></section>`; }
+  h += `<section class="panel"><h2>תדריך לינת לילה</h2><ol class="proc"><li>אנחנו בחניון <b>${esc(nav.end)}</b>. גבולות הגזרה ומה לא מתקרבים אליו בלילה (כביש סמוך).</li><li>אזור שינה, אזור בישול, שירותים לבנים ולבנות, ואיפה הצוות ישן.</li><li>סנדלים בלבד, לא כפכפי אצבע. נעליים מכוסות בגרביים, ניעור ציוד בבוקר.</li><li>שמירה בזוגות עם פנס, חצי שעה לכל זוג. עוזבים רק כשהמחליף מגיע. כל דבר חשוד: מעירים איש צוות.</li><li>חניך שהולך להתפנות מעדכן את השומרים בהליכה ובחזרה.</li></ol></section>`;
+  h += `<section class="panel"><h2>סיכום יום לצוות (10 דקות אחרי שהחניכים הלכו לישון)</h2>
+    <div class="grid2"><label class="f">סבב מילה אחת על היום<textarea id="st-word" data-staff="close.word">${esc(st.close?.word||"")}</textarea></label>
+    <label class="f">מה לא עבד ומה משנים מחר<textarea id="st-issues" data-staff="close.issues">${esc(st.close?.issues||"")}</textarea></label></div>
+    <p class="muted small" style="margin:0">${st.close?.t?"נשמר ב-"+hhmm(st.close.t):"נשמר אוטומטית כשעוזבים את השדה."}</p></section>`;
+  return h;
+}
+
+/* ----- roster ----- */
+function prevRoles(sq){
+  const idx = NAVS().findIndex(n=>n.id===S.nav); const out = {};
+  NAVS().slice(0,idx).forEach(n=>{ const r=(doc(n.id).roles||{})[sq]||{}; for(const k in r){ if(r[k]) (out[r[k]] ||= new Set()).add(k); } });
+  return out;
+}
+function vRoster(){
+  if(!curNav()) return "";
+  let h = `<p class="muted small" style="margin:0">סמנו נוכחות לפני היציאה ושבצו תפקידים. התפקידים מתחלפים בכל ניווט, והאפליקציה מסמנת מי כבר מילא את אותו תפקיד.</p><div class="cards">`;
+  SQ().forEach(sq=>{
+    const names = squad(sq).names, roles = (doc(S.nav).roles||{})[sq]||{}, pres=(doc(S.nav).present||{})[sq]||{}, prev = prevRoles(sq);
+    const pc = names.filter((_,i)=>pres[i]).length;
+    h += `<section class="panel sq" style="--sq:${sqColor(sq)}"><div class="card-h"><div class="sqname">חוליה ${esc(sq)}</div><span class="pill ${names.length&&pc===names.length?"ok":pc?"warn":"neutral"}">${pc}/${names.length} נוכחים</span></div>
+      ${names.length?`<div class="names">${names.map((nm,i)=>`<label><input type="checkbox" id="pr-${esc(S.nav)}-${esc(sq)}-${i}" data-pres="${esc(sq)}|${i}" ${pres[i]?"checked":""}>${esc(nm)}</label>`).join("")}</div>`:`<p class="muted small" style="margin:0">אין שמות בחוליה. הזן אותם במסך ההגדרות.</p>`}
+      <div class="roles">${ROLES.map(([k,l])=>{ const v=roles[k]||""; const rep = v && prev[v] && prev[v].has(k);
+        return `<label for="rl-${esc(S.nav)}-${esc(sq)}-${k}">${l}</label><select id="rl-${esc(S.nav)}-${esc(sq)}-${k}" data-role="${esc(sq)}|${k}"><option value="">בחר</option>${names.map(nm=>`<option ${nm===v?"selected":""}>${esc(nm)}</option>`).join("")}</select>${rep?`<span class="rep">כבר היה ${l} בניווט קודם</span>`:""}`; }).join("")}</div>
+    </section>`;
+  });
+  return h+"</div>";
+}
+
+/* ----- decision point ----- */
+function vDecision(){
+  const nav = curNav(); if(!nav) return ""; const d = doc(S.nav).decision||{};
+  const opt = ["יוצאים כמתוכנן","אופציה ב' (מסלול מקוצר)","דחיית יציאה","ביטול הניווט"];
+  const txt = `נקודת החלטה ${nav.label} ${nav.day}, ${cfg().unit||""}\nמזג אוויר: ${d.weather||"-"}\nעומס חום: ${d.heat||"-"}\nחולים / נעדרים: ${d.sick||"-"}\nמצב ביטחוני: ${d.security||"-"}\nהחלטה: ${d.option||"-"}\n${d.note||""}\nאישר: ${d.approvedBy||"-"} ${d.t?hhmm(d.t):""}`;
+  return `<section class="panel"><h2>נקודת החלטה 06:00 · ${esc(nav.label)}</h2>
+    <div class="grid2">
+      <label class="f">מזג אוויר (מוקד טבע)<input type="text" id="dc-weather" data-dec="weather" value="${esc(d.weather||"")}"></label>
+      <label class="f">עומס חום<select id="dc-heat" data-dec="heat">${["","קל","בינוני","כבד (אין הליכה)","קיצוני"].map(o=>`<option ${d.heat===o?"selected":""}>${o}</option>`).join("")}</select></label>
+      <label class="f">חולים / נעדרים<input type="text" id="dc-sick" data-dec="sick" value="${esc(d.sick||"")}"></label>
+      <label class="f">מצב ביטחוני<input type="text" id="dc-sec" data-dec="security" value="${esc(d.security||"")}"></label>
+      <label class="f">החלטה<select id="dc-opt" data-dec="option"><option value="">בחר</option>${opt.map(o=>`<option ${d.option===o?"selected":""}>${o}</option>`).join("")}</select></label>
+      <label class="f">אישר<input type="text" id="dc-by" data-dec="approvedBy" value="${esc(d.approvedBy||"")}"></label>
+    </div>
+    <label class="f">הערות<textarea id="dc-note" data-dec="note">${esc(d.note||"")}</textarea></label>
+    <div class="row"><button class="btn primary" data-copy="${esc(txt)}">העתק סיכום לשליחה למנהל האזור</button><span class="muted small">${d.t?"עודכן "+hhmm(d.t):"נשמר אוטומטית"}</span></div></section>
+    <section class="panel"><h2>כללי ביטול קבועים</h2><ol class="proc"><li>אין ניווט בגשם כבד, ברד, חשש לשיטפון, עומס חום כבד או רוחות חזקות.</li><li>ניווט רק בשעות האור. לאמת שעת שקיעה.</li><li>מעבר חובה מאומת ב-GPS לפני יציאת החוליות.</li><li>החובש ברכב החפ"ק. בלי חובש אין יציאה.</li></ol></section>`;
+}
+
+/* ----- crossing form ----- */
+function vCrossing(){
+  const nav = curNav(); if(!nav) return "";
+  if(!nav.cross) return `<p class="muted">בניווט הזה אין מעבר חובה.</p>`;
+  const c = fixedByName(nav.cross);
+  let h = `<section class="panel"><h2>טופס רישום מעבר חובה (נ10) · ${esc(nav.cross)}</h2><p class="muted small" style="margin:0">${c?`<span class="mono">${c.e}/${c.N}</span> · `:""}איש הצוות במעבר ממלא לכל חוליה. השעה נרשמת גם מלחיצה על "מ.ח" במסך השליטה.</p>
+  <div class="tablewrap"><table class="sum"><thead><tr><th>חוליה</th><th>שעת מעבר</th><th>משתתפים</th><th>מצב מים</th><th>הערות</th></tr></thead><tbody>`;
+  SQ().forEach(sq=>{ const st=sqState(S.nav,sq), x=st.crossing||{};
+    h += `<tr style="--sq:${sqColor(sq)}"><td class="sq">${esc(sq)}</td><td><span class="mono">${st.cross?hhmm(st.cross):"-"}</span>${st.cross?"":` <button class="btn small" data-step="${esc(sq)}|cross">עכשיו</button>`}</td>
+      <td><input type="number" min="0" id="cx-c-${esc(sq)}" data-cross="${esc(sq)}|count" value="${esc(x.count??"")}"></td>
+      <td><select id="cx-w-${esc(sq)}" data-cross="${esc(sq)}|water">${["","תקין","מילאו","חסר"].map(o=>`<option ${x.water===o?"selected":""}>${o}</option>`).join("")}</select></td>
+      <td><input type="text" id="cx-n-${esc(sq)}" data-cross="${esc(sq)}|note" value="${esc(x.note||"")}" style="width:160px"></td></tr>`; });
+  return h + `</tbody></table></div></section>`;
+}
+
+/* ----- logistics & water ----- */
+function vLogistics(now){
+  const nav = curNav(); if(!nav) return ""; const d = doc(S.nav), w = d.water||{}, rounds = w.rounds||[], chk = d.logistics||{};
+  const last = rounds.length? rounds[rounds.length-1].t : null;
+  const active = SQ().some(sq=>sqState(S.nav,sq).dep&&!sqState(S.nav,sq).fin);
+  const warn = active && (!last || now-last>3*3600000);
+  let h = `<section class="panel"><h2>מים</h2><p class="muted small" style="margin:0">אין מים בחניונים. שלושה סבבי מילוי ביום, רכב חפ"ק אחד. בזמן מילוי החפ"ק לא יוצא מהגזרה.</p>
+    ${warn?`<div class="banner warn">עברו יותר משלוש שעות מהמילוי האחרון וחוליות בשטח. לתכנן סבב מילוי.</div>`:""}
+    <div class="row">${[0,1,2].map(i=>`<span class="pill ${rounds[i]?"ok":"neutral"}">סבב ${i+1}${rounds[i]?" · "+hhmm(rounds[i].t):""}</span>`).join("")}<button class="btn primary" data-act="water">סבב מילוי בוצע עכשיו</button></div>
+    ${rounds.length?`<div class="evlist">${rounds.map(r=>`<div class="ev"><span class="mono">${hhmm(r.t)}</span><span>${esc(r.note||"מילוי מים")}</span></div>`).join("")}</div>`:""}</section>`;
+  h += `<section class="panel"><h2>צ'קליסט לוגיסטי · ${esc(nav.label)}</h2><div class="check">${LOG_ITEMS.map((it,i)=>`<label class="${chk[i]?"on":""}"><input type="checkbox" id="lg-${esc(S.nav)}-${i}" data-log="${i}" ${chk[i]?"checked":""}>${it}</label>`).join("")}</div></section>`;
+  h += `<section class="panel"><h2>פינוי ורפואה</h2><p style="margin:0">${esc(cfg().hospital||"לא הוגדר יעד פינוי. הזן במסך ההגדרות.")}</p></section>`;
+  return h;
+}
+
+/* ----- emergency ----- */
+function vSos(now,sts){
+  const silent = SQ().filter((sq,i)=>sts[i]?.alert);
+  return `${silent.length?`<div class="panel" style="border-color:var(--crit)"><h2 style="color:var(--crit)">חוליות בהתראה עכשיו</h2>${silent.map(sq=>{const i=SQ().indexOf(sq);const r=(doc(S.nav).roles||{})[sq]||{};const st=sts[i];const steps=stepsOf(S.nav,sq);const lastStep=[...steps].reverse().find(s=>s.t);return `<p style="margin:0"><b>חוליה ${esc(sq)}</b> · ${esc(st.text)} · מדריך: ${esc(squad(sq).guide||"")} · ראש חוליה: ${r.head?esc(r.head):"לא שובץ"}<br><span class="muted">מיקום אחרון: ${lastStep?lastStep.label+(lastStep.sub?" (נק' "+esc(lastStep.sub)+")":"")+" ב-"+hhmm(lastStep.t):"אין"}</span></p>`;}).join("")}</div>`:""}
+  <div class="panel"><h2>טלפונים</h2>${contactsHtml()}</div>
+  <div class="panel"><h2>נוהל נתק וחוליה שלא אותרה (חפ"ק, נ9)</h2><ol class="proc">
+    <li>חוליה שלא דיווחה במועד: החפ"ק מתקשר לראש החוליה מיד.</li><li>אין מענה: אחראי הפעילות בודק עם החוליות האחרות איפה ראו אותה לאחרונה.</li><li>מזהים את ציר החוליה ואת המיקום האחרון שבו היה קשר (מסך מפה ומסך שליטה).</li><li>רכב החפ"ק נוסע לנקודת שליטה ומנסה ליצור קשר, ואחר כך נוסע על ציר הניווט ומחפש.</li><li>אחראי הפעילות מארגן חוליות חיפוש של אנשי צוות, לפי כללי הבטיחות.</li><li>חריגה של יותר משעתיים משעת הגג: מעדכנים את חדר מצב טיולים (02-6222211) ואת מנהל האזור, ופועלים לפי הוראות יחידת החילוץ.</li></ol></div>
+  <div class="panel"><h2>נוהל "הלכתי לאיבוד" (לחוליות, נ8)</h2>${lostProc()}</div>
+  <div class="panel"><h2>פציעה</h2><ol class="proc"><li>החוליה עוצרת, מדווחת לחפ"ק מיקום ומהות הפגיעה.</li><li>החובש מגיע ברכב החפ"ק ובודק את חומרת הפגיעה.</li><li>פגיעה קלה: טיפול בשטח והמשך. פגיעה בינונית: פינוי ברכב למרפאה. פגיעה קשה: מד"א 101 ופינוי לבית החולים.</li><li>ממלאים טופס פגיעה, מעדכנים הורים ומנהל אזור.</li></ol></div>
+  <div class="panel"><h2>מכת חום</h2><p style="margin:0">זיהוי: כאב ראש, סחרחורת, חולשה, שתן כהה. טיפול: דיווח לחפ"ק, צל, מים מקו הצוואר ומטה, מנוחה. מניעה: כובע, שתייה, עצירות בצל.</p></div>`;
+}
+
+/* ----- log ----- */
+function vLog(){
+  if(!curNav()) return "";
+  const evs = (S.events[S.nav]||[]);
+  return `<div class="panel"><h2>רישום אירוע</h2><form class="addev" id="evform">
+    <select id="evsq" aria-label="חוליה"><option value="">כללי</option>${SQ().map(sq=>`<option value="${esc(sq)}">חוליה ${esc(sq)}</option>`).join("")}</select>
+    <select id="evtype" aria-label="סוג">${EVTYPES.map(t=>`<option>${t}</option>`).join("")}</select>
+    <textarea id="evtext" placeholder="מה קרה, איפה, מה עשינו" aria-label="תיאור"></textarea>
+    <button class="btn primary" type="submit">רשום ביומן</button></form></div>
+  <div class="evlist">${evs.length?evs.map(e=>`<div class="ev ${e.type==="auto"?"auto":""}" style="${e.sq?`--sq:${sqColor(e.sq)}`:""}"><span class="mono">${hhmm(e.t)}</span><span>${e.sq?`<b>חוליה ${esc(e.sq)}</b> · `:""}${e.type!=="auto"?`<b>${esc(e.type)}</b>: `:""}${esc(e.text)}</span>${e.by?`<span class="who" data-who="${esc(e.by)}">${esc(S.names[e.by]||"")}</span>`:""}</div>`).join(""):`<p class="muted">עדיין אין אירועים בניווט הזה. כל רישום במסך השליטה נכנס לכאן אוטומטית.</p>`}</div>`;
+}
+
+/* ----- students ----- */
+function vStudents(){
+  let h = `<p class="muted small" style="margin:0">כרטיס לכל חניך: מי צריך עין, רגישויות, והערות של המדריך במהלך השבוע. ההערות נשמרות לכל השבוע ומשמשות לשיחות האישיות.</p>`;
+  if(!SQ().some(sq=>squad(sq).names.length)) return h+`<p class="muted">אין שמות חניכים. הזן אותם במסך ההגדרות.</p>`;
+  h += `<div class="cards">`;
+  SQ().forEach(sq=>{
+    h += `<section class="panel sq" style="--sq:${sqColor(sq)}"><div class="sqname">חוליה ${esc(sq)}</div>`;
+    squad(sq).names.forEach((nm,i)=>{ const key=`s${sq}_${i}`, st=S.students[key]||{}, notes=st.notes||[];
+      h += `<div class="student ${st.eye?"eye":""}"><div class="row" style="justify-content:space-between"><b>${esc(nm)}</b><label class="row small"><input type="checkbox" id="eye-${key}" data-eye="${key}" ${st.eye?"checked":""}> צריך עין</label></div>
+        <label class="f">רגישויות / הערה קבועה<input type="text" id="med-${key}" data-med="${key}" value="${esc(st.medical||"")}" placeholder="למשל: אלרגיה, נעליים חדשות, קושי חברתי"></label>
+        ${notes.length?`<div class="notes">${notes.slice(-4).map(n=>`<span><span class="mono">${hhmm(n.t)}</span> ${esc(n.nav||"")}: ${esc(n.text)}</span>`).join("")}</div>`:""}
+        <div class="row"><input type="text" id="nt-${key}" placeholder="הערה חדשה" style="flex:1"><button class="btn small" data-note="${key}">הוסף</button></div></div>`; });
+    h += `</section>`;
+  });
+  return h+"</div>";
+}
+
+/* ----- debrief ----- */
+function legStats(navId){
+  const nav = navById(navId), out=[];
+  SQ().forEach(sq=>{ const r=routeOf(navId,sq), st=sqState(navId,sq), p=st.p||{};
+    const seq=[{name:nav.start,q:fixedByName(nav.start),t:st.dep}, ...(nav.cross?[{name:nav.cross,q:fixedByName(nav.cross),t:st.cross}]:[]), ...r.pts.map((q,i)=>({name:"נק' "+q.n,q,t:p[i]})), {name:nav.end,q:fixedByName(nav.end),t:st.fin}];
+    for(let i=1;i<seq.length;i++){ const a=seq[i-1],b=seq[i]; if(a.t&&b.t&&a.q&&b.q){ const km=dist(a.q,b.q)*1.25; if(km>0.05) out.push({sq,to:b.name,km,min:(b.t-a.t)/60000,mpk:(b.t-a.t)/60000/km}); } } });
+  return out;
+}
+function vDebrief(){
+  const nav = curNav(); if(!nav) return ""; const d=doc(S.nav), db=d.debrief||{};
+  let h = `<section class="panel"><h2>תחקיר חוליות · ${esc(nav.label)}</h2><p class="muted small" style="margin:0">ממלאים בעיבוד הערב, חוליה אחרי חוליה. הקושי בסולם 1 (קל) עד 5 (קשה מאוד).</p><div class="cards">`;
+  SQ().forEach(sq=>{ const x=db[sq]||{};
+    h += `<article class="panel sq" style="--sq:${sqColor(sq)}"><b>חוליה ${esc(sq)}</b>
+      <div class="scale" role="group" aria-label="קושי">${[1,2,3,4,5].map(v=>`<button aria-pressed="${x.diff===v}" data-diff="${esc(sq)}|${v}">${v}</button>`).join("")}</div>
+      <label class="f">החלטה נכונה שעשינו<input type="text" id="db-g-${esc(sq)}" data-deb="${esc(sq)}|good" value="${esc(x.good||"")}"></label>
+      <label class="f">טעות שלמדנו ממנה<input type="text" id="db-m-${esc(sq)}" data-deb="${esc(sq)}|mistake" value="${esc(x.mistake||"")}"></label>
+      <label class="f">הערת המדריך (תפקוד, מנהיגות, מי בלט)<textarea id="db-i-${esc(sq)}" data-deb="${esc(sq)}|instr">${esc(x.instr||"")}</textarea></label></article>`; });
+  h += `</div></section>`;
+  // cross-nav comparison
+  const navs = NAVS();
+  h += `<section class="panel"><h2>השוואה בין הניווטים</h2><div class="tablewrap"><table class="sum"><thead><tr><th>חוליה</th>${navs.map(n=>`<th>${esc(n.label)}<br><span class="muted small">מול גג · דק'/ק"מ</span></th>`).join("")}<th>ממוצע דק'/ק"מ</th></tr></thead><tbody>`;
+  SQ().forEach(sq=>{ let tot=0,c=0;
+    h += `<tr style="--sq:${sqColor(sq)}"><td class="sq">${esc(sq)}</td>${navs.map(n=>{ const st=sqState(n.id,sq), r=routeOf(n.id,sq); if(!st.dep||!st.fin) return "<td>-</td>"; const vs=st.fin-roofMs(n.id), mpk=(st.fin-st.dep)/60000/(r.walk||1); tot+=mpk;c++; return `<td class="${vs>0?"late":""}"><span class="mono">${(vs>0?"+":"")+dur(vs)}</span> · <span class="mono">${mpk.toFixed(0)}</span></td>`; }).join("")}<td><span class="mono">${c?(tot/c).toFixed(0):"-"}</span></td></tr>`; });
+  h += `</tbody></table></div><p class="muted small" style="margin:0">דק'/ק"מ = דקות לקילומטר הליכה משוער. 12-15 הוא קצב טוב בשטח הזה, מעל 20 מעיד על טעויות ניווט או עייפות.</p></section>`;
+  // per-point analysis
+  const legs = legStats(S.nav); const byPt={};
+  legs.forEach(l=>{ (byPt[l.to] ||= []).push(l); });
+  const rows = Object.entries(byPt).map(([to,ls])=>({to,n:ls.length,mpk:ls.reduce((a,b)=>a+b.mpk,0)/ls.length,max:Math.max(...ls.map(x=>x.mpk))})).sort((a,b)=>b.mpk-a.mpk);
+  h += `<section class="panel"><h2>נקודות שהקשו על החוליות</h2>${rows.length?`<div class="tablewrap"><table class="sum"><thead><tr><th>יעד המקטע</th><th>חוליות</th><th>ממוצע דק'/ק"מ</th><th>הגרוע ביותר</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.to)}</td><td>${r.n}</td><td><span class="mono">${r.mpk.toFixed(0)}</span></td><td><span class="mono">${r.max.toFixed(0)}</span></td><td style="min-width:120px"><div class="bar"><i style="width:${Math.min(100,r.mpk/30*100)}%"></i></div></td></tr>`).join("")}</tbody></table></div><p class="muted small" style="margin:0">אם כמה חוליות איטיות באותו מקטע, הבעיה בנקודה או בתיאור שלה, לא בחוליות.</p>`:`<p class="muted small" style="margin:0">יוצג אחרי שיירשמו זמני הגעה לנקודות.</p>`}</section>`;
+  return h;
+}
+
+/* ----- summary ----- */
+function summaryRows(){
+  const roof = roofMs(S.nav);
+  return SQ().map(sq=>{ const st=sqState(S.nav,sq), steps=stepsOf(S.nav,sq), r=routeOf(S.nav,sq);
+    const total = st.dep&&st.fin ? st.fin-st.dep : null; const evc=(S.events[S.nav]||[]).filter(e=>e.sq===sq && e.type!=="auto").length;
+    return {sq, steps, total, vsRoof: st.fin? st.fin-roof : null, kmh: total? (r.walk/(total/3600000)) : null, walk:r.walk, evc}; });
+}
+function vSum(){
+  if(!curNav()) return "";
+  const rows = summaryRows(); if(!rows.length) return "";
+  const maxSteps = Math.max(...rows.map(r=>r.steps.length));
+  let h = `<div class="tablewrap"><table class="sum"><thead><tr><th>חוליה</th>${rows[0].steps.map(s=>`<th>${s.label}</th>`).join("")}<th>משך</th><th>מול גג</th><th>ק"מ</th><th>קמ"ש</th><th>אירועים</th></tr></thead><tbody>`;
+  rows.forEach(r=>{ h += `<tr style="--sq:${sqColor(r.sq)}"><td class="sq">${esc(r.sq)}</td>${r.steps.map(s=>`<td><span class="mono">${s.t?hhmm(s.t):"-"}</span></td>`).join("")}${"<td></td>".repeat(maxSteps-r.steps.length)}
+      <td><span class="mono">${r.total?dur(r.total):"-"}</span></td><td class="${r.vsRoof>0?"late":""}"><span class="mono">${r.vsRoof==null?"-":(r.vsRoof>0?"+":"")+dur(r.vsRoof)}</span></td><td>${r.walk}</td><td><span class="mono">${r.kmh?r.kmh.toFixed(1):"-"}</span></td><td>${r.evc||"-"}</td></tr>`; });
+  h += `</tbody></table></div><p class="muted small" style="margin:0">"מול גג" שלילי = סיימה לפני שעת הגג. קמ"ש מחושב על הקילומטרים המשוערים של הציר.</p>
+   <div class="row"><button class="btn primary" data-act="csv">הורד סיכום לתחקיר (CSV)</button>
+   ${S.ask?.kind==="reset"?`<span>למחוק את כל הרישומים של ${esc(curNav().label)}? אי אפשר לשחזר.</span><button class="btn danger" data-act="resetyes">כן, אפס</button><button class="btn" data-act="askno">ביטול</button>`:`<button class="btn danger" data-act="reset">איפוס הניווט (לתרגול)</button>`}</div>`;
+  return h;
+}
+
+/* ----- setup ----- */
+const ptLine = q => `${q.n} ${q.e}/${q.N} ${q.d||""}`.trim();
+function draft(){ if(!S.setupDraft) S.setupDraft = JSON.parse(JSON.stringify(cfg())); return S.setupDraft; }
+function vSetup(){
+  const c = draft(); const fixNames = (c.fixed||[]).map(f=>f.name);
+  if(!S.canAdmin) return `<p class="muted">רק מי שיש לו הרשאת עריכה על העמוד יכול לשנות הגדרות.</p>`;
+  let h = `<div class="banner info">כאן שלוחה מגדירה את השבוע שלה: שם, חוליות ושמות, אנשי קשר, נקודות קבועות וצירים. השינויים נשמרים רק בלחיצה על "שמור הגדרות" בתחתית.</div>`;
+  h += `<section class="panel"><h2>כללי</h2><div class="grid2">
+    <label class="f">שם השלוחה והמחזור<input type="text" id="su-unit" data-su="unit" value="${esc(c.unit||"")}"></label>
+    <label class="f">אזור הניווט<input type="text" id="su-area" data-su="area" value="${esc(c.area||"")}"></label></div>
+    <label class="f">יעד פינוי רפואי<input type="text" id="su-hosp" data-su="hospital" value="${esc(c.hospital||"")}"></label>
+    <label class="f">אנשי קשר, שורה לכל אחד: שם, טלפון<textarea id="su-contacts" data-su="contacts" rows="5">${esc((c.contacts||[]).map(x=>x.join(", ")).join("\n"))}</textarea></label></section>`;
+  h += `<section class="panel"><h2>חוליות</h2><div class="row"><label class="f">מספר חוליות<input type="number" id="su-nsq" min="1" max="8" value="${(c.squads||[]).length}" data-su="nsq" style="width:80px"></label></div><div class="cards">`;
+  (c.squads||[]).forEach((s,i)=>{ h += `<div class="panel sq" style="--sq:var(--s${(i%8)+1})"><b>חוליה ${esc(s.id)}</b><label class="f">מדריך מלווה<input type="text" id="su-g-${i}" data-sq="${i}|guide" value="${esc(s.guide||"")}"></label><label class="f">חניכים, שם בכל שורה<textarea id="su-n-${i}" data-sq="${i}|names" rows="6">${esc((s.names||[]).join("\n"))}</textarea></label></div>`; });
+  h += `</div></section>`;
+  h += `<section class="panel"><h2>נקודות קבועות (חניונים, מעברי חובה, נקודות סיום)</h2><label class="f">שורה לכל נקודה: שם | מזרח/צפון ברשת ישראל החדשה<textarea id="su-fixed" data-su="fixed" rows="7">${esc((c.fixed||[]).map(f=>`${f.name} | ${f.e}/${f.N}`).join("\n"))}</textarea></label></section>`;
+  h += `<section class="panel"><h2>ניווטים</h2>`;
+  (c.navs||[]).forEach((n,ni)=>{
+    h += `<details class="brief" ${ni===0?"open":""}><summary>${esc(n.label||"ניווט "+(ni+1))} · ${esc(n.day||"")}</summary><div style="display:grid;gap:8px;margin-top:8px">
+      <div class="grid2"><label class="f">שם<input type="text" id="su-nl-${ni}" data-nav="${ni}|label" value="${esc(n.label||"")}"></label><label class="f">תאריך (יום.חודש)<input type="text" id="su-nd-${ni}" data-nav="${ni}|day" value="${esc(n.day||"")}"></label><label class="f">שעת גג<input type="time" id="su-nr-${ni}" data-nav="${ni}|roof" value="${esc(n.roof||"")}"></label>
+      <label class="f">התחלה<select id="su-ns-${ni}" data-nav="${ni}|start">${fixNames.map(f=>`<option ${n.start===f?"selected":""}>${esc(f)}</option>`).join("")}</select></label>
+      <label class="f">סיום<select id="su-ne-${ni}" data-nav="${ni}|end">${fixNames.map(f=>`<option ${n.end===f?"selected":""}>${esc(f)}</option>`).join("")}</select></label>
+      <label class="f">מעבר חובה<select id="su-nc-${ni}" data-nav="${ni}|cross"><option value="">אין</option>${fixNames.map(f=>`<option ${n.cross===f?"selected":""}>${esc(f)}</option>`).join("")}</select></label></div>
+      <label class="f">שעות יציאה: שעה אחת לכולן, או "1 06:30, 2 06:35" לכל חוליה<input type="text" id="su-ndep-${ni}" data-nav="${ni}|dep" value="${esc(depText(n.dep))}"></label>
+      <label class="f">דגשי הניווט<textarea id="su-nb-${ni}" data-nav="${ni}|brief" rows="2">${esc(n.brief||"")}</textarea></label>
+      <div class="grid2">${(c.squads||[]).map(s=>{ const r=(n.routes||{})[s.id]||{pts:[]}; return `<label class="f">ציר חוליה ${esc(s.id)}${r.lvl?" ("+esc(r.lvl)+")":""}: שורה לכל נקודה, "מספר מזרח/צפון תיאור"<textarea id="su-rt-${ni}-${esc(s.id)}" data-route="${ni}|${esc(s.id)}" rows="5">${esc((r.lvl?["רמה: "+r.lvl]:[]).concat(r.pts.map(ptLine)).join("\n"))}</textarea></label>`; }).join("")}</div>
+      <div class="row"><button class="btn small danger" data-act="delnav" data-ni="${ni}">מחק ניווט</button></div></div></details>`; });
+  h += `<div class="row"><button class="btn" data-act="addnav">הוסף ניווט</button></div></section>`;
+  h += `<section class="panel"><h2>העברה לשלוחה אחרת</h2><p class="muted small" style="margin:0">העתק את ההגדרות כטקסט והדבק אותן במסך ההגדרות של עותק אחר של האפליקציה. השמות עוברים יחד, אז מחק אותם לפני שמעבירים אם לא צריך.</p>
+    <div class="row"><button class="btn" data-copy="${esc(JSON.stringify(cfg()))}">העתק הגדרות (JSON)</button></div>
+    <label class="f">הדבק הגדרות מעותק אחר<textarea id="su-import" rows="3" placeholder='{"unit": ...}'></textarea></label><div class="row"><button class="btn" data-act="import">טען מהטקסט</button></div></section>`;
+  h += `<div class="row"><button class="btn primary" data-act="savecfg">שמור הגדרות</button><button class="btn" data-act="discardcfg">בטל שינויים</button>${S.setupMsg?`<span class="muted">${esc(S.setupMsg)}</span>`:""}</div>`;
+  return h;
+}
+function depText(dep){ if(!dep) return "06:30"; const vals=[...new Set(Object.values(dep))]; if(vals.length===1) return vals[0]; return Object.entries(dep).map(([k,v])=>k+" "+v).join(", "); }
+function parseDep(txt, sqs){ txt=(txt||"").trim(); const o={}; if(/^\d{1,2}:\d{2}$/.test(txt)){ sqs.forEach(s=>o[s]=txt); return o; }
+  txt.split(/[,\n]/).forEach(part=>{ const m=part.trim().match(/^(\S+)\s+(\d{1,2}:\d{2})$/); if(m) o[m[1]]=m[2]; }); sqs.forEach(s=>{ if(!o[s]) o[s]="06:30"; }); return o; }
+function parseRoute(txt){ let lvl="", pts=[]; (txt||"").split("\n").forEach(l=>{ l=l.trim(); if(!l) return; const lm=l.match(/^רמה:\s*(.+)$/); if(lm){lvl=lm[1].trim();return;}
+  const m=l.match(/^(\S+)\s+(\d{5,6})\s*[\/ ]\s*(\d{5,6})\s*(.*)$/); if(m) pts.push({n:m[1],e:+m[2],N:+m[3],d:m[4].trim()}); }); return {lvl,pts}; }
+function finishRoutes(c){ (c.navs||[]).forEach(n=>{ n.routes ||= {}; (c.squads||[]).forEach(s=>{ const r=n.routes[s.id]||{pts:[]}; const seq=[fixedByNameIn(c,n.start),fixedByNameIn(c,n.cross),...r.pts,fixedByNameIn(c,n.end)].filter(Boolean); let air=0; for(let i=1;i<seq.length;i++) air+=dist(seq[i-1],seq[i]); r.air=+air.toFixed(1); r.walk=+(air*1.25).toFixed(1); n.routes[s.id]=r; }); }); }
+const fixedByNameIn = (c,name) => (c.fixed||[]).find(f=>f.name===name);
+function applySetupField(el){
+  const c = draft();
+  if(el.dataset.su){ const k=el.dataset.su, v=el.value;
+    if(k==="contacts") c.contacts = v.split("\n").map(l=>l.split(/[,|]/).map(x=>x.trim())).filter(x=>x[0]&&x[1]).map(x=>[x[0],x[1]]);
+    else if(k==="fixed") c.fixed = v.split("\n").map(l=>{ const m=l.match(/^(.*?)\s*\|\s*(\d{5,6})\s*\/\s*(\d{5,6})/); return m?{name:m[1].trim(),e:+m[2],N:+m[3]}:null; }).filter(Boolean);
+    else if(k==="nsq"){ const n=Math.max(1,Math.min(8,+v||1)); c.squads = c.squads.slice(0,n); while(c.squads.length<n) c.squads.push({id:String(c.squads.length+1),guide:"",names:[]}); S.setupDraft=c; render(); }
+    else c[k]=v; }
+  if(el.dataset.sq){ const [i,k]=el.dataset.sq.split("|"); const s=c.squads[+i]; if(k==="names") s.names=el.value.split("\n").map(x=>x.trim()).filter(Boolean); else s[k]=el.value; }
+  if(el.dataset.nav){ const [i,k]=el.dataset.nav.split("|"); const n=c.navs[+i]; if(k==="dep") n.dep=parseDep(el.value,c.squads.map(s=>s.id)); else n[k]=el.value; }
+  if(el.dataset.route){ const [i,sq]=el.dataset.route.split("|"); const n=c.navs[+i]; n.routes ||= {}; n.routes[sq]=parseRoute(el.value); }
+}
+
+/* ---------- csv / reset / names ---------- */
+async function csv(){
+  const rows = summaryRows(), nav = curNav();
+  const head = ["חוליה", ...rows[0].steps.map(s=>s.label), "משך", "מול גג (דק')", "ק\"מ", "קמ\"ש", "אירועים"];
+  const lines = [head, ...rows.map(r=>[r.sq, ...r.steps.map(s=>s.t?hhmm(s.t):""), r.total?dur(r.total):"", r.vsRoof==null?"":Math.round(r.vsRoof/60000), r.walk, r.kmh?r.kmh.toFixed(1):"", r.evc])];
+  const db=doc(S.nav).debrief||{}; lines.push([]); lines.push(["תחקיר חוליות"]); lines.push(["חוליה","קושי","החלטה נכונה","טעות","הערת מדריך"]);
+  SQ().forEach(sq=>{ const x=db[sq]||{}; lines.push([sq,x.diff||"",x.good||"",x.mistake||"",x.instr||""]); });
+  lines.push([]); lines.push(["יומן אירועים"]);
+  (S.events[S.nav]||[]).slice().reverse().forEach(e=>lines.push([hhmm(e.t), e.sq?("חוליה "+e.sq):"כללי", e.type==="auto"?"":e.type, e.text]));
+  const text = "﻿"+lines.map(l=>l.map(c=>`"${String(c??"").replace(/"/g,'""')}"`).join(",")).join("\n");
+  const dl = window.claude?.use ? await window.claude.use("downloads") : null;
+  if(!dl){
+    if(!window.claude){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/csv"})); a.download=`ניווט-${nav.id}-סיכום.csv`; document.body.appendChild(a); a.click(); a.remove(); return; }
+    S.err="ההורדה לא זמינה בתצוגה הזו."; render(); return; }
+  try{ await dl.save({filename:`ניווט-${nav.id}-סיכום.csv`, data:new Blob([text],{type:"text/csv"})}); }catch(e){}
+}
+async function resetNav(){
+  const id = S.nav; S.ask=null;
+  if(S.local){ S.docs[id]={}; S.events[id]=[]; localSave(); render(); return; }
+  try{ await S.db.doc("navs/"+id).set({created:Date.now()}); const q = await S.db.collection("navs/"+id+"/events").get(); for(const d of q.docs) await S.db.doc("navs/"+id+"/events/"+d.id).delete(); }catch(e){ showErr(e); }
+}
+async function resolveNames(){
+  if(!S.user) return;
+  const ids = [...new Set(Object.values(S.events).flat().map(e=>e.by).filter(Boolean))]; if(!ids.length) return;
+  const ps = await S.user.profiles(ids); let changed=false;
+  ids.forEach(id=>{ const n=ps[id]?.name||"איש צוות"; if(S.names[id]!==n){S.names[id]=n;changed=true;} });
+  if(changed) document.querySelectorAll("[data-who]").forEach(el=>{ el.textContent = S.names[el.dataset.who]||""; });
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", async ev=>{
+  const b = ev.target.closest("button"); if(!b) return;
+  const act = b.dataset.act;
+  if(b.dataset.nav){ S.nav=b.dataset.nav; S.pop=null; S.ask=null; try{localStorage.setItem("nav",S.nav)}catch(e){} render(); return; }
+  if(b.dataset.tab){ S.tab=b.dataset.tab; S.sheet=false; S.ask=null; try{localStorage.setItem("tab",S.tab)}catch(e){} render(); scrollTo(0,0); return; }
+  if(act==="more"){ S.sheet=!S.sheet; render(); return; }
+  if(b.dataset.filter!==undefined){ S.filter=b.dataset.filter||null; render(); return; }
+  if(b.dataset.rep){ report(S.nav,b.dataset.rep); return; }
+  if(b.dataset.copy!==undefined){ try{ await navigator.clipboard.writeText(b.dataset.copy); b.textContent="הועתק"; }catch(e){ const r=document.createRange(); r.selectNodeContents(b.previousElementSibling||b); const s=getSelection(); s.removeAllRanges(); s.addRange(r);} return; }
+  if(b.dataset.step){
+    const [sq,key] = b.dataset.step.split("|"); const steps = stepsOf(S.nav,sq); const s = steps.find(x=>x.key===key); const nextIdx = steps.findIndex(x=>!x.t);
+    if(!s.t && steps.indexOf(s)===nextIdx){ S.pop=null; if(key==="dep") tryDepart(sq); else stamp(S.nav,sq,key); }
+    else if(S.tab==="control"){ S.pop={sq,key}; render(); }
+    return;
+  }
+  if(b.dataset.diff){ const [sq,v]=b.dataset.diff.split("|"); patch(S.nav,{debrief:{[sq]:{diff:+v}}}); return; }
+  if(b.dataset.note){ const key=b.dataset.note, inp=$("#nt-"+key); const text=inp.value.trim(); if(!text) return; const notes=[...((S.students[key]||{}).notes||[]), {t:Date.now(),by:S.myId||null,text,nav:curNav()?.label||""}]; patchStudent(key,{notes}); addEvent(S.nav,{sq:key.match(/^s(.+?)_/)[1],type:"חניך",text:(squad(key.match(/^s(.+?)_/)[1]).names[+key.split("_")[1]]||"")+": "+text}); return; }
+  if(act==="popclose"){ S.pop=null; render(); }
+  if(act==="popsave"){ const v=$("#poptime").value; if(v){ const t=atTime(S.nav,v); const {sq,key}=S.pop; S.pop=null; stamp(S.nav,sq,key,t); } }
+  if(act==="popclear"){ const {sq,key}=S.pop; S.pop=null; const o={}; if(key.startsWith("p")) o.p={[key.slice(1)]:null}; else o[key]=null; patch(S.nav,{squads:{[sq]:o}}); addEvent(S.nav,{sq,type:"auto",text:"בוטל רישום: "+stepsOf(S.nav,sq).find(x=>x.key===key).label}); }
+  if(act==="clearerr"){ S.err=null; render(); }
+  if(act==="askno"){ S.ask=null; render(); }
+  if(act==="depanyway"){ const sq=S.ask.sq; S.ask=null; stamp(S.nav,sq,"dep"); addEvent(S.nav,{sq,type:"הערה",text:"יצאה ללא סימון תדריך מלא"}); }
+  if(act==="sqdep"){ tryDepart(S.mySq); }
+  if(act==="sqsos"){ addEvent(S.nav,{sq:S.mySq,type:"נתק קשר",text:"החוליה דיווחה: הלכנו לאיבוד / אין קשר"}); S.tab="sos"; render(); }
+  if(act==="briefall"){ const sq=b.dataset.sq; const items={}; BRIEF_ITEMS.forEach((_,i)=>items[i]=true); patch(S.nav,{briefs:{[sq]:{items,t:Date.now(),by:S.myId||null}}}); addEvent(S.nav,{sq,type:"auto",text:"תדריך בוקר הושלם"}); }
+  if(act==="water"){ const rounds=[...((doc(S.nav).water||{}).rounds||[]),{t:Date.now(),by:S.myId||null}]; patch(S.nav,{water:{rounds}}); addEvent(S.nav,{type:"auto",text:"סבב מילוי מים "+rounds.length}); }
+  if(act==="csv") csv();
+  if(act==="reset"){ S.ask={kind:"reset"}; render(); }
+  if(act==="resetyes") resetNav();
+  if(act==="addnav"){ const c=draft(); c.navs.push({id:"nav"+Date.now().toString(36),label:"ניווט "+(c.navs.length+1),day:"",roof:"12:00",start:c.fixed[0]?.name||"",end:c.fixed[0]?.name||"",cross:"",dep:parseDep("06:30",c.squads.map(s=>s.id)),brief:"",routes:{}}); render(); }
+  if(act==="delnav"){ draft().navs.splice(+b.dataset.ni,1); render(); }
+  if(act==="savecfg"){ const c=draft(); finishRoutes(c); S.setupDraft=null; S.setupMsg="נשמר"; await saveCfg(c); render(); }
+  if(act==="discardcfg"){ S.setupDraft=null; S.setupMsg=null; render(); }
+  if(act==="import"){ try{ const c=JSON.parse($("#su-import").value); if(!c.squads||!c.navs) throw 0; S.setupDraft=c; S.setupMsg="נטען, לחץ שמור הגדרות"; }catch(e){ S.setupMsg="הטקסט לא תקין"; } render(); }
+});
+document.addEventListener("change", ev=>{
+  const t = ev.target;
+  if(t.id==="mysq"){ S.mySq=t.value||null; try{localStorage.setItem("mySq",S.mySq||"")}catch(e){} render(); return; }
+  if(t.dataset.pres){ const [sq,i]=t.dataset.pres.split("|"); patch(S.nav,{present:{[sq]:{[i]:t.checked}}}); }
+  if(t.dataset.role){ const [sq,k]=t.dataset.role.split("|"); patch(S.nav,{roles:{[sq]:{[k]:t.value||null}}}); }
+  if(t.dataset.brief){ const [sq,i]=t.dataset.brief.split("|"); const cur=((doc(S.nav).briefs||{})[sq]||{}).items||{}; const items={...cur,[i]:t.checked}; const all=BRIEF_ITEMS.every((_,j)=>items[j]); patch(S.nav,{briefs:{[sq]:{items:{[i]:t.checked},...(all?{t:Date.now(),by:S.myId||null}:{})}}}); if(all) addEvent(S.nav,{sq,type:"auto",text:"תדריך בוקר הושלם"}); }
+  if(t.dataset.log){ patch(S.nav,{logistics:{[t.dataset.log]:t.checked}}); }
+  if(t.dataset.staff){ const [a,k]=t.dataset.staff.split("."); patch(S.nav,{staff:{[a]:{[k]:t.value,t:Date.now()}}}); }
+  if(t.dataset.dec){ patch(S.nav,{decision:{[t.dataset.dec]:t.value,t:Date.now()}}); }
+  if(t.dataset.cross){ const [sq,k]=t.dataset.cross.split("|"); patch(S.nav,{squads:{[sq]:{crossing:{[k]:k==="count"?(t.value===""?null:+t.value):t.value}}}}); }
+  if(t.dataset.deb){ const [sq,k]=t.dataset.deb.split("|"); patch(S.nav,{debrief:{[sq]:{[k]:t.value}}}); }
+  if(t.dataset.eye){ patchStudent(t.dataset.eye,{eye:t.checked}); }
+  if(t.dataset.med){ patchStudent(t.dataset.med,{medical:t.value}); }
+  if(t.dataset.su||t.dataset.sq||t.dataset.nav||t.dataset.route) applySetupField(t);
+});
+document.addEventListener("focusout", ()=>{ setTimeout(()=>{ if(S.dirty && !editing()) render(); },60); });
+document.addEventListener("submit", ev=>{
+  if(ev.target.id!=="evform") return; ev.preventDefault();
+  const text=$("#evtext").value.trim(); if(!text) return;
+  addEvent(S.nav,{sq:$("#evsq").value||null, type:$("#evtype").value, text}); $("#evtext").value="";
+});
+
+/* ---------- boot ---------- */
+if(!window.claude){ S.persist=true; localLoad(); }
+render();
+setInterval(()=>{ if(!editing()) render(); }, 20000);
+(async()=>{
+  if(!window.claude?.use) return;
+  const [db,user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+  S.user = user; if(user){ S.myId = await user.id(); S.canAdmin = await user.canEdit(); }
+  if(!db){ S.persist=true; S.canAdmin=true; localLoad(); render(); return; }
+  S.db = db; S.local = false;
+  db.doc("config/main").onSnapshot(snap=>{ S.cfg = snap.exists ? snap.data() : null; S.cfgLoaded=true; subscribeNavs(); render(); }, e=>showErr(e));
+  db.collection("students").onSnapshot(q=>{ S.students={}; q.docs.forEach(d=>S.students[d.id]=d.data()); if(S.tab==="students") render(); }, e=>showErr(e));
+})();
+const subs = {};
+function subscribeNavs(){
+  NAVS().forEach(n=>{ if(subs[n.id]) return;
+    subs[n.id] = [
+      S.db.doc("navs/"+n.id).onSnapshot(snap=>{ S.docs[n.id] = snap.exists ? {...snap.data(), __exists:true} : {}; render(); }, e=>showErr(e)),
+      S.db.collection("navs/"+n.id+"/events").orderBy("t","desc").limit(500).onSnapshot(q=>{ S.events[n.id]=q.docs.map(d=>({id:d.id,...d.data()})); if(["log","sum","debrief","students"].includes(S.tab)) render(); }, e=>showErr(e))
+    ]; });
+}
+</script>
